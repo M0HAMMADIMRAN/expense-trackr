@@ -12,10 +12,8 @@ export default function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
-    return () => unsubscribe();
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
   }, []);
 
   const handleLogout = async () => {
@@ -25,6 +23,7 @@ export default function App() {
 
   return (
     <div>
+      {/* Navbar */}
       <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
         <div className="container-fluid">
           <Link to="/dashboard" className="navbar-brand">
