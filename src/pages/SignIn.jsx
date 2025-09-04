@@ -6,28 +6,51 @@ import { Link, useNavigate } from "react-router-dom";
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👁️ toggle state
+  const [showPassword, setShowPassword] = useState(false);
   const [err, setErr] = useState("");
+  const [success, setSuccess] = useState(""); // ✅ success state
   const navigate = useNavigate();
 
   const onSubmit = async (e) => {
     e.preventDefault();
     setErr("");
+    setSuccess("");
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/");
+      setSuccess("✅ Logged in successfully!");
+      setTimeout(() => navigate("/"), 1500); // delay to show message
     } catch (e) {
-      setErr(e.message);
+      let msg = "Something went wrong. Please try again.";
+      switch (e.code) {
+        case "auth/invalid-credential":
+        case "auth/user-not-found":
+          msg = "Account does not exist. Please sign up first.";
+          break;
+        case "auth/wrong-password":
+          msg = "Incorrect password. Please try again.";
+          break;
+        case "auth/invalid-email":
+          msg = "Invalid email address format.";
+          break;
+        case "auth/user-disabled":
+          msg = "This account has been disabled. Contact support.";
+          break;
+        default:
+          msg = e.message;
+      }
+      setErr(msg);
     }
   };
 
   const onGoogle = async () => {
     setErr("");
+    setSuccess("");
     try {
       await signInWithPopup(auth, googleProvider);
-      navigate("/");
+      setSuccess("✅ Logged in successfully with Google!");
+      setTimeout(() => navigate("/"), 1500);
     } catch (e) {
-      setErr(e.message);
+      setErr("Google login failed. Please try again.");
     }
   };
 
@@ -37,32 +60,36 @@ export default function SignIn() {
         onSubmit={onSubmit}
         className="bg-white p-4 rounded shadow w-100"
         style={{ maxWidth: "400px" }}
-        autoComplete="on" // ✅ allow autofill
+        autoComplete="on"
       >
         <h3 className="text-center text-primary mb-4">Sign In</h3>
 
-        {/* Email Field */}
+        {/* Alerts */}
+        {err && <div className="alert alert-danger">{err}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
+
+        {/* Email */}
         <input
           type="email"
-          name="username" // ✅ important for autofill
+          name="username"
           placeholder="Email"
           className="form-control mb-3"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          autoComplete="username" // ✅ autofill email
+          autoComplete="username"
           required
         />
 
-        {/* Password Field with Toggle */}
+        {/* Password + Toggle */}
         <div className="input-group mb-3">
           <input
             type={showPassword ? "text" : "password"}
-            name="current-password" // ✅ important for password managers
+            name="current-password"
             placeholder="Password"
             className="form-control"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password" // ✅ autofill password
+            autoComplete="current-password"
             required
           />
           <button
@@ -73,9 +100,6 @@ export default function SignIn() {
             {showPassword ? "🙈 Hide" : "👁️ Show"}
           </button>
         </div>
-
-        {/* Error Message */}
-        {err && <div className="text-danger mb-2">{err}</div>}
 
         {/* Actions */}
         <button type="submit" className="btn btn-primary w-100 mb-2">

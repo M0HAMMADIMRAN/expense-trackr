@@ -5,7 +5,7 @@ import { db } from "../lib/firebase";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import {
-  PieChart, Pie, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  PieChart, Pie, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell,
 } from "recharts";
 
 export default function Dashboard({ user }) {
@@ -49,6 +49,16 @@ export default function Dashboard({ user }) {
       .sort((a, b) => Number(a.day) - Number(b.day));
   }, [expenses]);
 
+  // 🎨 Define colors for categories
+  const COLORS = {
+    Food: "#ff6b6b",
+    Travel: "#4dabf7",
+    Rent: "#845ef7",
+    Shopping: "#f59f00",
+    Bills: "#20c997",
+    Other: "#adb5bd",
+  };
+
   return (
     <div className="container my-4">
       <h2 className="mb-4">
@@ -57,6 +67,7 @@ export default function Dashboard({ user }) {
       </h2>
 
       <div className="row g-4">
+        {/* Add Expense Form */}
         <div className="col-lg-6">
           <div className="card shadow-sm">
             <div className="card-body">
@@ -65,20 +76,38 @@ export default function Dashboard({ user }) {
           </div>
         </div>
 
+        {/* Pie/Donut Chart */}
         <div className="col-lg-6">
           <div className="card shadow-sm">
             <div className="card-body">
               <h5 className="card-title">Category Split</h5>
-              <PieChart width={400} height={300}>
-                <Pie dataKey="value" data={byCategory} cx="50%" cy="50%" outerRadius={100} fill="#0d6efd" label />
+              <PieChart width={500} height={400}>
+                <Pie
+                  dataKey="value"
+                  data={byCategory}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={150}
+                  innerRadius={60} // makes donut style
+                  paddingAngle={5}
+                  label
+                >
+                  {byCategory.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[entry.name] || "#0d6efd"} // fallback if new category
+                    />
+                  ))}
+                </Pie>
                 <Tooltip />
-                <Legend />
+                <Legend layout="horizontal" verticalAlign="bottom" align="center" />
               </PieChart>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Bar Chart */}
       <div className="card shadow-sm my-4">
         <div className="card-body">
           <h5 className="card-title">Daily Spend (This Month)</h5>
@@ -93,6 +122,7 @@ export default function Dashboard({ user }) {
         </div>
       </div>
 
+      {/* Expense Table */}
       <div className="card shadow-sm">
         <div className="card-body">
           <ExpenseList user={user} />
